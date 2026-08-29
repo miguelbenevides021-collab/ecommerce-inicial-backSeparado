@@ -1,0 +1,132 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum Role{
+  CLIENT
+  ADMIN
+}
+
+model User{
+  id  Int @id @default(autoincrement())
+  name  String @db.VarChar(100)
+  email String  @unique @db.VarChar(150)
+  password  String @db.VarChar(255)
+  cpf String @unique  @db.VarChar(11)
+  role  Role  @default(CLIENT)
+  address Address[]
+  cart  Cart[]
+  order Order[]
+  createdAt DateTime @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model Address{
+  id Int  @id @default(autoincrement())
+  iduser  Int
+  rua String  @db.VarChar(100)
+  numero  String  @db.VarChar(20)
+  bairro  String @db.VarChar(100)
+  cidade  String  @db.VarChar(100)
+  cep String  @db.VarChar(10)
+  estado  String  @db.VarChar(2)
+  complemento String?  @db.VarChar(60)
+  user  User  @relation(fields: [iduser], references: [id])
+  createdAt  DateTime  @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Categoria{
+  id  Int @id @default(autoincrement())
+  name  String @unique @db.VarChar(50)
+  slug  String @unique @db.VarChar(50)
+  product Product[]
+  createdAt DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model Product{
+  id  Int @id @default(autoincrement())
+  categoriaId Int
+  name  String  @db.VarChar(60)
+  description String  @db.VarChar(500)
+  price Decimal @db.Decimal(10,2)
+  productImage  ProductImage[]
+  cartItem CartItem[]
+  orderItem OrderItem[]
+  stock Int
+  brand String  @db.VarChar(60)
+  categoria Categoria @relation(fields: [categoriaId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model ProductImage{
+  id  Int @id @default(autoincrement())
+  productId Int
+  imageUrl  String  @db.VarChar(100)
+  product Product @relation(fields: [productId], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+} 
+
+model Cart{
+  id  Int @id @default(autoincrement())
+  userId  Int
+  user  User  @relation(fields: [userId], references: [id])
+   cartItem CartItem []
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model CartItem{
+  id  Int @id @default(autoincrement())
+  productId Int
+  cartId  Int
+  quantity  Int
+  product Product @relation(fields: [productId],references: [id])
+  cart  Cart  @relation(fields: [cartId],references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Order{
+  id  Int @id @default(autoincrement())
+  userId  Int
+  user  User  @relation(fields: [userId], references: [id])
+  orderItem OrderItem[]
+  status  OrderStatus @default(PENDING)
+  total Decimal @db.Decimal(10,2)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELED
+}
+
+model OrderItem{
+  id  Int @id @default(autoincrement())
+  orderId Int
+  productId Int
+  quantity  Int
+  price Decimal @db.Decimal(10,2)
+  product Product @relation(fields: [productId], references: [id])
+  order Order @relation(fields: [orderId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
