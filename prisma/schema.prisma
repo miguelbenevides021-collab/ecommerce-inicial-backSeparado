@@ -84,7 +84,7 @@ model Cart{
   id  Int @id @default(autoincrement())
   userId  Int
   user  User  @relation(fields: [userId], references: [id])
-   cartItem CartItem []
+  cartItem CartItem []
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }

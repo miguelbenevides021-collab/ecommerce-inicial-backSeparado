@@ -44,5 +44,3 @@ export async function creatProduct(req: Request, res: Response) {
     return res.status(500).json({ error: "backend sem respostas" });
   }
 }
-
-export async function productsGet(req: Request, res: Response) {}
