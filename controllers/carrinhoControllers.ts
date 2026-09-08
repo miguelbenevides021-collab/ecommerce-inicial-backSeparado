@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
+import { error } from "node:console";
 
 export async function carrinhoGet(req: Request, res: Response) {
   try {
@@ -131,5 +132,61 @@ export async function carrinhoDelete(req: Request, res: Response) {
   } catch (err) {
     console.error("Erro ao deletar", err);
     return res.status(500).json({ error: "Erro ao deletar" });
+  }
+}
+
+export async function putCarrinhoControllers(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+    const { quantity } = req.body;
+    if (!id) {
+      return res.status(400).json({ error: "Id invalido" });
+    }
+    if (typeof quantity !== "number" || quantity <= 0) {
+      return res.status(400).json({ error: "Quantidade inválida" });
+    }
+    const idNumber = Number(id);
+
+    if (isNaN(idNumber)) {
+      return res.status(400).json({ error: "Id invalido" });
+    }
+
+    const cartProcurar = await prisma.cart.findFirst({
+      where: { userId: req.user!.id },
+    });
+
+    if (!cartProcurar) {
+      return res.status(404).json({ error: "Carrinho não encontrado" });
+    }
+
+    const cartIdExiste = await prisma.cartItem.findUnique({
+      where: { id: idNumber },
+      include: {
+        cart: true,
+      },
+    });
+
+    if (!cartIdExiste) {
+      return res.status(404).json({ error: "Produto não encontrado" });
+    }
+    if (cartIdExiste.cart.userId !== req.user!.id) {
+      return res
+        .status(403)
+        .json({ error: "voce nao tem permisão para acessar esta opção" });
+    }
+
+    const update = await prisma.cartItem.update({
+      where: {
+        id: idNumber,
+      },
+      data: {
+        quantity,
+      },
+    });
+
+    return res.json(update);
+  } catch (err) {
+    console.error("error ao atualizar o carrinho", err);
+    return res.status(500).json({ error: "Erro ao atualizar carrinho" });
   }
 }

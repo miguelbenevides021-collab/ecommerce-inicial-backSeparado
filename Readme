@@ -1,0 +1,136 @@
+# Nexora — API de E-commerce
+
+Backend RESTful para uma plataforma de e-commerce, construído do zero com autenticação por níveis de acesso (cliente/administrador), catálogo de produtos, carrinho de compras e gestão completa de pedidos.
+
+## 🛠️ Tecnologias
+
+- **Node.js** + **Express** — servidor e roteamento
+- **TypeScript** — tipagem estática
+- **Prisma ORM** — modelagem e acesso ao banco de dados
+- **MySQL / MariaDB** — banco de dados relacional
+- **JWT (jsonwebtoken)** — autenticação baseada em token
+- **bcryptjs** — hash de senhas
+- **express-rate-limit** — limitação de requisições
+
+## ⚙️ Funcionalidades
+
+### Autenticação e Autorização
+- Registro de usuário com validação de CPF (algoritmo de dígito verificador), senha forte e formato de e-mail
+- Login com geração de JWT contendo `id` e `role`
+- Dois níveis de acesso: `CLIENT` e `ADMIN`
+- Novos usuários sempre nascem como `CLIENT` — a role nunca é definida pelo próprio cliente, evitando autopromoção indevida
+
+### Perfil
+- Consulta dos dados do usuário autenticado, sem exposição de dados sensíveis (senha nunca retorna nas respostas)
+
+### Produtos
+- CRUD completo (criação, edição e remoção restritas a administradores)
+- Listagem e visualização de produto individual disponíveis publicamente, sem necessidade de autenticação
+
+### Categorias
+- Criação restrita a administradores
+- Listagem pública
+
+### Carrinho de Compras
+- Adição de itens, com soma automática de quantidade caso o produto já esteja no carrinho
+- Edição de quantidade de um item específico
+- Remoção de itens
+- Cada operação valida que o item pertence ao usuário autenticado antes de permitir a ação
+
+### Pedidos
+- Checkout a partir do carrinho: o total é calculado, um pedido é criado e os preços dos produtos são "congelados" no momento da compra (protegendo o histórico contra alterações futuras de preço)
+- Histórico de pedidos do próprio cliente
+- Painel administrativo para visualizar todos os pedidos de todos os usuários
+- Atualização de status do pedido pelo administrador (`PENDING` → `PAID` → `SHIPPED` → `DELIVERED` / `CANCELED`)
+
+## 🗂️ Modelagem do banco de dados
+
+O projeto utiliza um banco relacional com as seguintes entidades principais:
+
+- **User** → possui um ou mais **Address**, um **Cart** e vários **Order**
+- **Cart** → contém vários **CartItem**, cada um referenciando um **Product**
+- **Order** → contém vários **OrderItem**, que preservam o preço do produto no momento da compra
+- **Product** → pertence a uma **Categoria**, podendo ter várias **ProductImage**
+
+A separação entre `Cart`/`CartItem` e `Order`/`OrderItem` garante que o histórico de compras permaneça imutável mesmo que o carrinho ou os preços dos produtos mudem depois.
+
+## 🔒 Segurança
+
+- Senhas armazenadas exclusivamente como hash (bcrypt), nunca em texto plano
+- CPF validado através do algoritmo oficial de dígito verificador, não apenas por tamanho
+- Toda rota sensível exige token JWT válido (`authMiddlewares`) e, quando aplicável, papel de administrador (`isAdmin`)
+- Verificação de propriedade de recurso: um usuário só pode visualizar, editar ou remover itens de carrinho que pertencem a ele mesmo
+- Login retorna mensagem genérica para credenciais inválidas, evitando enumeração de usuários cadastrados
+- Rate limiting configurado para mitigar abuso da API
+- Variáveis sensíveis (chave JWT, string de conexão do banco) mantidas fora do controle de versão via `.env`
+
+## 📍 Principais Endpoints
+
+| Método | Rota | Descrição | Acesso |
+|--------|------|-----------|--------|
+| POST | `/auth/register` | Cria uma nova conta | Público |
+| POST | `/auth/login` | Autentica e retorna um token | Público |
+| GET | `/profile` | Retorna os dados do usuário autenticado | Autenticado |
+| GET | `/products` | Lista todos os produtos | Público |
+| GET | `/products/:id` | Detalha um produto específico | Público |
+| POST | `/admin/products` | Cria um produto | Admin |
+| PUT | `/admin/products/:id` | Edita um produto | Admin |
+| DELETE | `/admin/products/:id` | Remove um produto | Admin |
+| GET | `/categories` | Lista todas as categorias | Público |
+| POST | `/admin/categories` | Cria uma categoria | Admin |
+| GET | `/carrinho` | Retorna o carrinho do usuário | Autenticado |
+| POST | `/carrinho` | Adiciona um item ao carrinho | Autenticado |
+| PUT | `/carrinho/:id` | Atualiza a quantidade de um item | Autenticado |
+| DELETE | `/carrinho/:id` | Remove um item do carrinho | Autenticado |
+| POST | `/orders` | Finaliza a compra a partir do carrinho | Autenticado |
+| GET | `/orders` | Lista os pedidos do usuário | Autenticado |
+| GET | `/admin/orders` | Lista todos os pedidos | Admin |
+| PATCH | `/admin/orders/:id` | Atualiza o status de um pedido | Admin |
+
+## 🚀 Como rodar localmente
+
+**Pré-requisitos:** Node.js instalado e um banco MySQL/MariaDB disponível.
+
+1. Clone o repositório
+   ```bash
+   git clone <url-do-repositorio>
+   cd backend
+   ```
+
+2. Instale as dependências
+   ```bash
+   npm install
+   ```
+
+3. Crie um arquivo `.env` na raiz do projeto, seguindo o modelo abaixo:
+   ```
+   DATABASE_URL="mysql://usuario:senha@localhost:3306/nome_do_banco"
+   JWT_SECRET="uma-string-longa-e-aleatoria"
+   ```
+
+4. Rode as migrations do Prisma
+   ```bash
+   npx prisma migrate dev
+   ```
+
+5. Inicie o servidor em modo desenvolvimento
+   ```bash
+   npm run dev
+   ```
+
+O servidor sobe por padrão em `http://localhost:3000`.
+
+## 📚 Sobre o projeto
+
+Este backend foi desenvolvido do zero como projeto de estudo, com foco em compreender profundamente autenticação, modelagem de banco de dados relacional, segurança de API e boas práticas de arquitetura REST — priorizando entendimento sobre cada decisão em vez de apenas fazer o código funcionar.
+
+## 🔜 Próximos passos
+
+- Desenvolvimento do frontend
+- Upload e gerenciamento de imagens de produto
+- Deploy em ambiente de produção
+- Testes automatizados
+
+## 👤 Autor
+
+Miguel Benevides
