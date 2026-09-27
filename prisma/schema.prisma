@@ -61,6 +61,7 @@ model Product{
   name  String  @db.VarChar(60)
   description String  @db.VarChar(500)
   price Decimal @db.Decimal(10,2)
+  imageUrl String? @db.VarChar(255)
   productImage  ProductImage[]
   cartItem CartItem[]
   orderItem OrderItem[]

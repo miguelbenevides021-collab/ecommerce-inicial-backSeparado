@@ -42,3 +42,46 @@ export async function categoria(req: Request, res: Response) {
     return res.status(500).json({ error: "Erro ao criar categoria" });
   }
 }
+
+export async function deleteCategorias(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ error: "id nao encontrado" });
+    }
+
+    const idNumber = Number(id);
+
+    if (isNaN(idNumber)) {
+      return res.status(400).json({ error: "Id nao valido" });
+    }
+
+    const procurarcategoria = await prisma.categoria.findUnique({
+      where: {
+        id: idNumber,
+      },
+    });
+
+    if (!procurarcategoria) {
+      return res.status(404).json({ error: "Categoria nao encontrada" });
+    }
+
+    const deletarCategoria = await prisma.categoria.delete({
+      where: {
+        id: idNumber,
+      },
+    });
+
+    return res.json(deletarCategoria);
+  } catch (err: any) {
+    if (err.code === "P2003") {
+      return res.status(409).json({
+        error:
+          "Não é possível remover uma categoria que possui produtos associados",
+      });
+    }
+    console.error("err: ", err);
+    return res.status(500).json({ error: "Erro ao deletar a categoria" });
+  }
+}

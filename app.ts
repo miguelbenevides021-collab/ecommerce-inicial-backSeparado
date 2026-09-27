@@ -12,7 +12,6 @@ import produtosGetRoutes from "./routes/productsClientRoutes";
 import CategoriasClienteRoutes from "./routes/categoriaClienteRoutes";
 import OrderRoutes from "./routes/ordersRoutes";
 import AdminOrdersRoutes from "./routes/ordersAdminRoutes";
-
 const app = express();
 
 const limiter = rateLimit({

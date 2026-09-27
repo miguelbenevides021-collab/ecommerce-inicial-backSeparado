@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
-import { error } from "node:console";
 
 export async function creatProduct(req: Request, res: Response) {
-  const { categoriaId, name, description, price, stock, brand } = req.body;
+  const { categoriaId, name, description, price, stock, brand, imageUrl } =
+    req.body;
   try {
     if (!categoriaId || !name || !description || !price || !stock || !brand) {
       return res.status(400).json({
@@ -36,6 +36,7 @@ export async function creatProduct(req: Request, res: Response) {
         price,
         stock,
         brand,
+        imageUrl,
       },
     });
 
@@ -49,7 +50,7 @@ export async function creatProduct(req: Request, res: Response) {
 export async function putProducts(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const { name, description, price, stock, brand } = req.body;
+    const { name, description, price, stock, brand, imageUrl } = req.body;
     if (!id) {
       return res.status(400).json({ error: "Id não encontrado" });
     }
@@ -76,6 +77,7 @@ export async function putProducts(req: Request, res: Response) {
         price: price,
         stock: stock,
         brand: brand,
+        imageUrl,
       },
     });
     return res.json(putProductadmin);
