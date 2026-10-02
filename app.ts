@@ -1,5 +1,5 @@
 import express from "express";
-import Cors from "cors";
+import cors from "cors";
 import "dotenv/config";
 import rateLimit from "express-rate-limit";
 
@@ -12,15 +12,26 @@ import produtosGetRoutes from "./routes/productsClientRoutes";
 import CategoriasClienteRoutes from "./routes/categoriaClienteRoutes";
 import OrderRoutes from "./routes/ordersRoutes";
 import AdminOrdersRoutes from "./routes/ordersAdminRoutes";
+
 const app = express();
+
+app.set("trust proxy", 1);
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
 });
 
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://ecommerce-nexora-frontend.vercel.app",
+    ],
+  }),
+);
+
 app.use(express.json());
-app.use(Cors());
 app.use(limiter);
 
 app.use("/auth", authRota);
